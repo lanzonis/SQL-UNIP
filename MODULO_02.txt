@@ -1,0 +1,388 @@
+MODULO_02
+
+É necessário especificar 5 parâmetros para estabelecer a conexão com o servidor PostgreSQL.
+- HOST ou Host address
+- PORT
+- Database name
+- User
+- Password
+
+-- Para obter informações da conexão atual
+	--Mostra em qual port o servidor está "escutando"
+	--SELECT inet_server_port();
+	
+	--Mostra o BD atual
+	--SELECT current_database();
+	
+	--Mostra o usuario atual
+	--SELECT current_user;
+	
+	--Mostra o endereço IP do servidor que aceitou a conexão
+	--SELECT inet_server_addr();
+
+	--Habilitando o acesso remoto
+	
+	--listen_addresses, especifica qual endereço IP será "ouvido" * para todos.
+
+	--Type = host, significa uma conexão remota
+
+	--Database = all, "para todos os bancos de dados"
+
+	--User = all, "para todos os usuários"
+
+	--em (posgresql.conf) editar / adicionar a linha abaixo
+		--listen_adresses = "*"
+
+	--Adicionar linha (pg_hba.conf), permitindo acesso a todos os databases.
+
+	--Method = trust, não há autenticação.
+
+	--Conectando ao Database LBD via psql
+		--No terminal, "caminhe" até o diretório em que se encontra o Banco
+			Ex: C:\ProgramFiles\PostgreSQL\9.x\bin
+		--No diretorio escolhido utilize
+			psql -h localhost -p 5432 -d LBD -U postgres -W
+-------------------------------------------------------------------------------------------
+
+	--SQL (Structured Query Language)
+
+--Seleção de tabela ex
+	SELECT lista_de_colunas
+	FROM nome_da tabela
+
+--Seleção básica no "LBD"
+
+SELECT *
+FROM tb_item;  -- Retorna todos os itens da tabela tb_item
+
+Select cidade, sobrenome
+FROM tb_cliente; -- Retorna a cidade e o sobrenome de todos os clientes
+
+É possível utilizar um apelido para um determinada coluna
+	EX:
+	   SELECT cidade AS "Cidade do Cliente",
+		  sobrenome AS "Sobrenome do Cliente"
+	   FROM tb_cliente; -- Retorna o mesmo da seleção anterior, mas atribuindo apelidos a coluna. (o AS é opcional).
+
+--Seleção ordenada ex:
+
+SELECT lista_de_colunas
+FROM nome_tabela
+ORDER BY nome_coluna [ASC | DESC]; * Por padrão a ordem ASC é utilizada
+
+--Seleção ordenada no "LBD"
+SELECT cidade "cidade do cliente",
+       sobrenome "Sobrenome do Cliente"
+FROM tb_cliente
+ORDER BY cidade;
+
+--Seleção ordenada (com mais de uma clausula) no "LBD"
+SELECT  cidade "Cidade do Cliente",
+	sobrenome "Sobrenome do Cliente"
+FROM tb_cliente
+ORDER BY cidade DESC, sobrenome ASC;	
+	
+
+
+--Seleção distinta (sem tuplas duplicadas)
+SELECT DISTINCT lista_de_colunas
+FROM nome_tabela
+
+--Seleção distinta no "LBD"
+
+SELECT DISTINCT(sobrenome)
+FROM tb_cliente
+ORDER BY 1;
+
+
+--Realizando calculos
+*Exibindo
+SELECT ds_item, preco_custo
+FROM tb_item
+ORDER BY 1;
+
+--Incrementar o valor do preco de custo da tb_item
+SELECT ds_item, preco_custo,
+	preco_custo * 100 AS RESULTADO
+FROM tb_item
+ORDER BY 1;
+
+--Utilizando a função CAST para formatar/alterar o tipo de dado
+
+-- CAST no "LBD"
+SELECT ds_item, preco_custo,
+	CAST((preco_custo * 100) AS INT) AS "Preço de Custo"
+FROM tb_item
+ORDER BY 1;
+
+
+
+--Selecionando tuplas especificas
+--Utilizando WHERE
+Ex:
+SELECT lista_de_colunas
+FROM nome_tabelas
+WHERE condições (AND, OR, NOT) (<, <=, =, >=, >, <>)
+
+--Utilizando WHERE no "LBD"
+
+SELECT  sobrenome AS "Sobrenome do Cliente",
+	cidade AS "Cidade do Cliente"
+FROM tb_cliente
+WHERE cidade = 'São Paulo';
+
+--Recuperando os nomes dos clientes que NÃO possuem o titulo de "Sra", mas residem na cidade de São Paulo ou Sertãozinho
+
+SELECT  sobrenome AS "Sobrenome do Cliente",
+	cidade AS "Cidade do Cliente"
+FROM tb_cliente
+WHERE titulo <> 'Sra'
+AND (cidade = 'Sertãozinho' OR cidade = 'São Paulo');
+
+--Recuperação de tuplas que contem o sobrenome e a cidade utilizando a condição IN
+
+SELECT  sobrenome AS "Sobrenome do Cliente",
+	cidade AS "Cidade do Cliente"
+FROM tb_cliente
+WHERE cidade IN('São Paulo', 'Sorocaba'); 
+
+
+--Permite verificar um determinado intervalo de valor especificando o valor inicial e final utilizando BETWEEN
+
+--Recuperando o Id e nome no intervalo do ID de 5 a 9
+SELECT id_cliente, nome
+FROM tb_cliente
+WHERE id_cliente BETWEEN 5 AND 9;
+
+--Recuperando os clientes com os nomes que iniciam com A e D.
+SELECT id_cliente, nome
+FROM tb_cliente
+WHERE nome BETWEEN 'A' AND 'D';
+
+--Comparando strings utilizando LIKE
+%: corresponde a qualquer sequencia de caractere
+_: corresponde a um unico caractere
+
+--Combinar os nomes que iniciam com a letra "R":
+
+SELECT id_cliente,nome
+FROM tb_cliente
+WHERE nome LIKE 'R%';
+
+--Combinar os nomes que terminam com a letra "e":
+
+SELECT id_cliente, nome 
+FROM tb_cliente
+WHERE nome LIKE '%e';
+
+--Combinar os nomes que correspondem a exatamente quatro caracteres
+
+SELECT id_cliente, nome
+FROM tb_cliente
+WHERE nome LIKE '____';
+
+
+--Mesclando os dois tipos anteriores:
+--Recuperar todos os clientes cujos nomes iniciam com a letra "a" no segundo caractere
+SELECT id_cliente, nome
+FROM tb_cliente
+WHERE nome LIKE '_a%';
+
+
+--Clausula LIMIT
+Extremamente útil quando necessitamos restringir o número de linhas retornadas 
+
+-- Recuperando os clientes utilizando a clausula LIMIT
+SELECT id_cliente, nome
+FROM tb_cliente
+LIMIT 5;
+
+
+--Clausula OFFSET:
+Utilizada em conjunto com a LIMIT, determina a posição de partida
+EX:
+SELECT id_cliente, nome 
+FROM tb_cliente
+LIMIT 8 OFFSET 2; *Pula 2 tuplas 
+
+--Utilizando apenas OFFSET
+SELECT id_cliente, nome
+FROM tb_cliente
+OFFSET 12; *Pula 12 tuplas
+
+-------------------------------------------------------------------------------------------
+
+--Verificando valores nulos para uma determinada coluna 
+-Irei construir uma tabela nomeada de TB_TESTE
+TB_TESTE possui apenas um atributo (coluna_a - tipo INTEGER)
+
+---Tabela de Teste
+
+CREATE TABLE tb_teste(
+coluna_a 	INTEGER);
+
+INSERT INTO tb_teste
+VALUES
+(0),(1),(NULL);
+
+--Verificando os valores da coluna 
+
+SELECT *
+FROM tb_teste
+WHERE coluna_a = 1; -- Para retornar os valores da coluna que são iguais a 1.
+
+--Utilizando a palavra-chave IS para retornar valor nulo
+
+SELECT * 
+FROM tb_teste
+WHERE coluna_a IS NULL;
+
+--Utilizando a palavra chave para retornar todos as tuplas que não contem nulo
+
+SELECT * 
+FROM tb_teste
+WHERE coluna_a IS NOT NULL;
+
+-------------------------------------------------------------------------------------------
+
+-- Datas em SQL
+--POSTGRES utiliza o estilo de data ISO-8601 (YYYY-MM-DD) (hh:mm:ss)
+Controlado pelo arquivo: postgresql.conf (datestyle = 'iso,mdy')
+
+--Alterando a forma de exibição no estilo SQL utilizando a conveção europeia (DD/MM/YYYY)
+SET datestyle TO 'European, SQL';
+
+
+--Utilizando função para converter um string em uma data
+SELECT CAST ('2014/05/01' AS DATE);
+
+--Utilizando a função para converter uma string em uma data (timestamp)
+SELECT CAST('2014/05/01' AS TIMESTAMP);
+
+--Recuperar as tuplas da tb_pedido onde o mês = Setembro
+SELECT *
+FROM tb_pedido
+WHERE date_part('month', dt_compra) = 9;
+
+--Extraindo o (ano, mês, dia, hora, minuto e segundo) de uma determinada data
+SELECT * 
+FROM tb_pedido
+WHERE dt_compra >= CAST('2013 07 21' AS date);
+
+
+-- Obtendo data e hota atual do servidor de BD
+SELECT now(), current_timestamp;
+
+--Efetuando cálculos simples utilizando as datas 
+EX: data de entrega / data de compra; E retorna o intervalo entre as duas.
+
+SELECT dt_entrega - dt_compra AS intervalo
+FROM tb_pedido;
+
+-------------------------------------------------------------------------------------------
+
+
+Relacionando 2 tabelas:
+tb_cliente e tb_pedido são unificadas por meio do atributo id_cliente, existente em ambas as tabelas.
+
+O cliente cujo id_cliente cooresponde ao nr.8 da tb_cliente, está vinculado ao valor do id_cliente da tb_pedido (paridade).
+
+-- Recuperando todos os pedidos pertinentes a cliente nomeada de Anna Kelly
+--Descobrindo o id Anna Kelly
+
+SELECT id_cliente
+FROM tb_cliente
+WHERE nome = 'Anna' AND sobrenome = 'Kelly';
+
+--Com o id em mãos, podemos verificar os pedidos pertinentes a esse cliente
+SELECT *
+FROM tb_pedido
+WHERE id_cliente = 8;
+
+--Podemos unificar essa etapa utilizando a seguinte sintaxe
+SELECT <lista de colunas>
+FROM <lista de tabelas>
+WHERE <condição de junção>
+AND <condição de seleção de linhas>
+
+--Ex com o nome e data :
+SELECT tb_cliente.nome, tb_pedido.dt_compra 
+FROM tb_cliente, tb_pedido
+WHERE tb_cliente.id_cliente = tb_pedido.id_cliente
+AND tb_cliente.id_cliente =  8;
+
+--Recuperando o nome e as datas de compras referente ao cliente cujo nome seja equivalente a Agnaldo Apericido
+
+SELECT tb_cliente.nome, tb_pedido.dt_compra
+FROM tb_cliente, tb_pedido
+WHERE tb_cliente.id_cliente = tb_pedido.id_cliente
+AND tb_cliente.nome = 'Agnaldo'
+AND tb_cliente.sobrenome = 'Aparecido';
+
+-------------------------------------------------------------------------------------------
+
+--Listar produtos com seus respectivos códigos de barras pelo preco_custo (tabelas relacionadas por meio atributo (id_item)
+
+SELECT ds_item, preco_custo, codigo_barras
+FROM tb_item, tb_codigo_barras
+WHERE tb_codigo_barras.id_item = tb_item.id_item
+ORDER BY 2;
+
+
+--Utilizando apelidos na seleção de tabelas
+
+SELECT c.nome, p.dt_compra
+FROM tb_cliente c, tb_pedido p 
+WHERE c.id_cliente = p.id_cliente
+AND c.nome = 'Anna'
+AND c.sobrenome = 'Kelly';
+
+--Realizando Join entre multiplas tabelas (3 ou mais tabelas)
+--Sintaxe utilizando WHERE 
+--Obter informações referente aos itens dos pedidos de Anna Kelly utilizando WHERE
+--Utilizando 3 tabelas e WHERE (tb_cliente, tb_pedido e tb_item_pedido)
+
+SELECT c.nome, p.dt_compra, ip.id_item, ip.quantidade
+FROM tb_cliente c, tb_pedido p, tb_item_pedido ip
+WHERE c.id_cliente = p.id_cliente
+AND p.id_pedido = ip.id_pedido
+AND c.nome = 'Anna'
+AND c.sobrenome = 'Kelly';
+
+--Obter informações referente aos itens dos pedidos de Anna Kelly, juntamente com a descrição de cada item utilizando WHERE
+SELECT <lista de colunas>
+FROM <lista de tabelas>
+WHERE <condição de junção> <condição de seleção de linhas>
+
+--Utilizando 4 tabelas e WHERE (tb_cliente, tb_pedido, tb_item_pedido e tb_item)
+
+SELECT c.nome, p.dt_compra, ip.id_item, i.ds_item, ip.quantidade
+FROM tb_cliente c, tb_pedido p, tb_item_pedido ip, tb_item i 
+WHERE c.id_cliente = p.id_cliente
+AND p.id_pedido = ip.id_pedido
+AND ip.id_item = i.id_item
+AND c.nome = 'Anna'
+AND c.sobrenome = 'Kelly';
+
+--Utilizando INNER JOIN 
+SELECT <lista de colunas>
+FROM <lista de tabelas>
+INNER JOIN <tabela> ON <condição de junção>
+WHERE <condição de seleção de linhas>
+
+SELECT  c.nome, p.dt_compra, ip.id_item,
+	i.ds_item, ip.quantidade
+FROM tb_cliente c
+INNER JOIN tb_pedido p ON (c.id_cliente = p.id_cliente)
+INNER JOIN tb_item_pedido ip ON (p.id_pedido = ip.id_pedido)
+INNER JOIN tb_item i ON (ip.id_item = i.id_item)
+WHERE   c.nome = 'Anna' AND 
+	c.sobrenome = 'Kelly';
+		
+
+
+
+
+
+
+	
