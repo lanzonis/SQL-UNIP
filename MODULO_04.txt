@@ -1,0 +1,86 @@
+MODULO_04
+
+-- Identificando a versão correta da distribuição do SGBD
+SELECT version();
+
+--Quanto tempo faz que o servidor iniciou
+
+SELECT date_trunc('second', 
+	 current_timestampo - pg_postmaster_start_time()) as iniciou;
+ou 
+SELECT current_timestamp - pg_postmaster_start_time();
+
+--Data e hora de inicio do servidor
+
+SELECT pg_postmaster_start_time();
+
+--Listando os Databases do servidor
+
+*Pode ser recuperada a partir da tabela nomeada de pg_database
+
+Ex:
+SELECT datname
+FROM pg_database;
+
+--Obtendo informação através de um comando SQL(database corrente)
+
+SELECT pg_database_size(current_database());
+
+--Obtendo informação através de um comando SQL(todos os databases)
+
+SELECT SUM(pg_database_size(datname))
+FROM pg_database;
+
+--Obtendo informação acerca do tamanho de uma determinada tabela
+
+SELECT pg_relation_size('tb_cliente');
+
+--Restaurando uma tabela (prompt)
+pg_restore.exe --host localhost --port5432 --username postgres --dbname "CORREIOS" --verbose "C:/temp/CORREIOS.backup" 
+
+--Obtendo o numero de linhas pertinentes do BD CORREIOS
+
+SELECT COUNT(*)
+FROM logradouros;
+
+-------------------------------------------------------------------------------------------
+
+DEPENDECIAS 
+
+Em BDs haverá dependencias entre os objetos 
+
+EX, irei criar duas tabelas tb_pedido e tb_item_pedido e realizar a ligação entre elas
+
+
+CREATE TABLE tb_pedido(
+id_pedido	INTEGER,
+PRIMARY KEY(id_pedido));
+
+CREATE TABLE tb_item_pedido(
+id_item		SMALLINT,
+id_pedido	INTEGER,
+quantidade	INTEGER,
+PRIMARY KEY(id_item,id_pedido));
+
+--Adicionando uma ligação entre as tabelas
+ALTER TABLE tb_item_pedido
+ADD FOREIGN KEY (id_pedido)
+ REFERENCES tb_pedido(id_pedido);
+
+
+--Verificando em PSQL as informações de uma determinada tabela 
+\d+ tb_pedido -- (No prompt após acessar a tabela) 
+
+
+--Obtendo detalhes pertinentes as "constraints" usando a consulta abaixo
+
+SELECT *
+FROM pg_constraint
+WHERE confrelid = 'tb_pedido'::regclass;
+
+
+
+
+
+
+
