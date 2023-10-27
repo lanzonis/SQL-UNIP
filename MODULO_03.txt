@@ -1,0 +1,199 @@
+MODULO_03
+
+Inserindo valores nulos e caracteres especiais em uma tupla 
+
+--Valores nulos
+INSERT INTO tb_cliente(id_cliente, titulo, nome, sobrenome, endereco, numero, cep, 				complemento, cidade, estado, fone_fixo, fone_movel,fg_ativo)
+VALUES
+(21, 'Sr', 'Teste NULL', 'Silva', Rua Teste NULL', 's/n', 
+OU
+INSERT INTO tb_cliente
+VALUES
+(16, 'Sr', 'Sidney', 'Magal', 'Rua Teste', '71', NULL, '13400 500', 'Cravinhos', 'SP', '4939 2386', '8092 6832', 1); -- Lembrando que um valor de uma tupla não pode ser nulo se o mesmo for criado com a opção NOTNULL, o SGBD desconsidera tudo o que estiver entre '';
+
+*É possivel também não informar o valor da coluna de uma tabela
+
+--Caracteres especiais ex: ' Apóstrofo
+INSERT INTO tb_cliente
+VALUES 
+(17, 'Sra', 'Joana', 'D''arc', 'Rua Aurora', '10', NULL, '40013 890', 'Ourinhos', 'SP', '4939 2386', '8092 6832',1);
+
+-------------------------------------------------------------------------------------------
+
+Inserindo dados em uma coluna do tipo SERIAL
+
+SERIAL: inteiro automaticamente incrementado
+
+utilizando uma sequencia que inicie no 1 com 1 de incremento: 
+
+CREATE SEQUENCE sq_teste
+ MINVALUE 1
+ INCREMENT 1
+ START 1 
+ NO CYCLE; --default
+
+--Criando uma tabela sequencial teste
+
+CREATE TABLE tb_pratica_sequencia(
+ coluna_a 	INTEGER DEFAULT NEXTVAL('sq_teste'),
+ coluna_b 	VARCHAR,
+ coluna_c 	VARCHAR,
+ PRIMARY KEY(coluna_a));
+OU
+CREATE TABLE tb_pratica_sequencia(
+ coluna_a	SERIAL,
+ coluna_b 	VARCHAR,
+ coluna_c 	VARCHAR, 
+ PRIMARY KEY(coluna_a));
+	
+);
+
+-- Inserindo valores na tb_pratica_sequencia
+
+INSERT INTO tb_pratica_sequencia(coluna_b,
+				 coluna_c)
+VALUES
+('Exemplo D', 'Exemplo D'),
+('Exemplo E', 'Exemplo E'),
+('Exemplo F', 'Exemplo F');
+
+OU
+
+INSERT INTO tb_pratica_sequencia(coluna_a,
+				 coluna_b,
+				 coluna_c)
+VALUES
+(DEFAULT, 'Exemplo G', 'Exemplo G');
+
+
+--Manipulando uma sequencia numerica 
+	seq_<nome_tabela>_<nome_coluna>
+	NEXTVAL('seq_tb_cliente_id_cliente');
+
+--A função NEXTVAL realiza o incremento da sequencia baseando-se no valor do incremento (increment)
+	SELECT NEXTVAL('sq_teste');
+
+--Recuperando o valor atual de uma sequencia por meio da função CURRVAL
+	SELECT CURRVAL('sq_teste');
+
+--Obtendo informações sobre a sequencia
+	SELECT *
+	FROM sq_teste;
+
+--Função SETVAL configura um novo valor para a sequencia
+	SELECT SETVAL('sq_teste',100); -- Ultimo valor bigint será 100
+
+-------------------------------------------------------------------------------------------
+Importação de dados
+
+COPY nome_tabela FROM 'nome_arquivo'
+ [USING DELIMITERS 'uma string simples como delimitador']
+ [WITH NULL 'um string o qual irá simbolizar o NULL']
+
+COPY tb_cliente
+FROM 'C:/temp/cliente.txt' 
+USING DELIMITERS ';';
+* Pasta temp e cliente.txt criadas localmente para realizar a importação.
+
+Carregando dados de uma tabela pré-existente (backup)
+-- criando uma nova tabela
+CREATE TABLE tb_backup_cliente(
+ id_cliente 	INTEGER,
+ titulo		CHAR(4),
+ nome 		VARCHAR(32) NOT NULL,
+ sobrenome 	VARCHAR(32) NOT NULL,
+ endereco 	VARCHAR(62) NOT NULL,
+ numero 	VARCHAR(5)  NOT NULL,
+ complemento 	VARCHAR(10),
+ cidade 	VARCHAR(62) NOT NULL,
+ estado 	CHAR(2) NOT NULL,
+ fone_fixo 	VARCHAR(15) NOT NULL,
+ fone_movel 	VARCHAR(15) NOT NULL,
+ fg_ativo 	INTEGER,
+ PRIMARY KEY(id_cliente));
+
+--copiando os dados
+INSERT INTO tb_backup_cliente
+SELECT *
+FROM tb_cliente
+WHERE nome IS NOT NULL;
+
+-------------------------------------------------------------------------------------------
+
+Atualização de dados em uma determinada tabela
+
+Sintaxe:
+
+UPDATE nome_tabela
+ SET nome_coluna = novo_valor
+WHERE condição
+
+--Alterando colunas da tb_cliente (utilizando WHERE)
+
+UPDATE tb_cliente
+ SET titulo = 'Sra',
+     nome = 'Marta'
+WHERE id_cliente = 21;
+
+--Alterando dados da tb_backup_cliente (sem uso da cláusula WHERE)
+
+UPDATE tb_backup_cliente
+ SET fg_ativo = 99;
+********** FORTEMENTE ACONSELHÁVEL REALIZAR O USO DA CLÁUSULA WHERE
+
+--Alterando os dados da tb_backup_cliente a partir da tb_cliente
+
+UPDATE tb_backup_cliente
+ SET nome = tb_cliente.nome
+FROM tb_cliente
+WHERE tb_cliente.id_cliente = 9
+AND tb_backup_cliente.id_cliente = 10;
+
+-------------------------------------------------------------------------------------------
+
+Remover dados de uma tabela  utilizando DELETE
+
+Sintaxe:
+
+DELETE
+FROM nome_tabela
+WHERE condição;
+
+* DELETE trabalha com tuplas/linhas 
+** Para remover um registro de uma coluna específica, devemos utilizar a instrução UPDATE (NULL)
+
+Ex: Removendo tuplas da tb_backup_cliente 
+
+DELETE 
+FROM tb_backup_cliente
+WHERE id_cliente >= 900;
+
+-- DELETE realiza "Scanning" em cada tupla, permitindo o uso do ROLLBACK
+
+*UPDATE/DELETE trabalha apenas com uma tabela por vez
+
+
+--Remover dados de uma tabela utilizando TRUNCATE
+
+Sintaxe:
+TRUNCATE
+TABLE nome_tabela;
+
+Removendo permanentemente todos os dados da tb_backup_cliente
+
+Ex:
+TRUNCATE
+TABLE tb_backup_cliente;
+
+
+--Duas maneiras de remover todas as linhas/tuplas de uma tabela
+		-- DELETE sem o uso da cláusula WHERE
+		-- TRUNCATE remove permanentemente os dados de maneira mais eficiente 
+
+ 
+
+
+
+
+
+
